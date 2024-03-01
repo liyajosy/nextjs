@@ -17,7 +17,7 @@ const Navbar = ()=>{
               },
             )} >Homepage</Link>
             <Link href ="/about" className={clsx('justify-center gap-2 rounded-md bg-gray-50 p-3 ', { 'bg-sky-100 text-blue-600': pathname === "/about",}, )}>
-                About Page</Link>
+                About</Link>
             <Link href ="/contact"className={clsx(
               'justify-center gap-2 rounded-md bg-gray-50 p-3 ',
               {
