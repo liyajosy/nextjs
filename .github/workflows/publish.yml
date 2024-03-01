@@ -1,5 +1,3 @@
-# This is a basic workflow to help you get started with Actions
-
 name: CI
 
 on:
@@ -7,65 +5,47 @@ on:
     branches:
       - master
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
-      - name: Setup Node.js 
-        uses: ./.github/workflows/setup-node
-
-      - name: Setup Pages 
-        uses: actions/configure-pages@v4
+      - name: Setup Node
+        uses: actions/setup-node@v1
         with:
-          static_site_generator: next
+          node-version: 16
 
-      - name: Build with Next.js 
+      - name: Install dependencies
+        uses: bahmutov/npm-install@v1
+
+      - name: Build project
         run: npx next build
 
-      - name: Upload artifact 
-        uses: actions/upload-pages-artifact@v3
+      - name: Upload production-ready build files
+        uses: actions/upload-artifact@v2
         with:
-          path: ./out
-          
-      - name : Set up node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-
-      - name: Cache dependencies 
-        id: cache_dependencies
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: node-modules-${{ hashFiles('package-lock.json') }}
-
-      - name: Install dependencies 
-        shell: bash
-        if: steps.cache_dependencies.outputs.cache-hit != 'true'
-        run: npm ci
+          name: production-files
+          path: ./dist
 
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    runs-on: ubuntu-latest
+    name: Deploy
     needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: Publish to GitHub Pages 
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: production-files
+          path: ./dist
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
